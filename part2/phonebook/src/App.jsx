@@ -7,7 +7,7 @@ const App = () => {
   const [newName, setNewName] = useState('');
   const [newNumber, setNewNumber] = useState('');
   const [lastID, setLastID] = useState(5)
-  const [showNames, setShowNames] = useState(persons);
+  const [filterTerms, setFilterTerms] = useState('');
 
   const hook = () => {
     axios
@@ -18,7 +18,6 @@ const App = () => {
   }
 
   useEffect(hook, [])
-  console.log(persons);
 
   const handleChange = (event) => {    
     const { name, value } = event.target;
@@ -41,17 +40,22 @@ const App = () => {
     setNewNumber('');
   }
 
-  const filterNames = (event) => {
-    const target = event.target.value.toLowerCase();
+  const handleFilterChange = (event) => {
+    setFilterTerms(event.target.value.toLowerCase());
+  }
 
-    const valid = persons.filter(person => person.name.toLowerCase().includes(target));
-    setShowNames(target ? valid : persons);
+  let filteredPersons = [];
+
+  for (let i = 0; i < persons.length; i++) {
+    if (persons[i].name.includes(filterTerms)) {
+      filteredPersons.push(persons[i])
+    }
   }
 
   return (
     <div>
       <h2>Phonebook</h2>
-      <Filter filterNames={filterNames} />
+      <Filter handleFilterChange={handleFilterChange} />
       
       <h3>Add a new</h3>
       <PersonForm 
@@ -62,16 +66,18 @@ const App = () => {
       />
 
       <h3>Numbers</h3>
-      <Names contacts={showNames} />
+      <Names contacts={filteredPersons} />
+
+      <button onClick={()=>console.log(filteredPersons)}>filteredPersons</button>
     </div>
   )
 }
 
-const Filter = ({ filterNames }) => {
+const Filter = ({ handleFilterChange }) => {
   return (
     <div>
       filter shown with
-      <input onChange={filterNames}/>
+      <input onChange={handleFilterChange}/>
     </div>
   )
 }
