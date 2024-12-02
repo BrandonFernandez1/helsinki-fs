@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import personService from './services/services.js'
-import axios from 'axios'
-
+import './index.css'
 
 const App = () => {
   const [persons, setPersons] = useState([]) 
@@ -9,6 +8,7 @@ const App = () => {
   const [newNumber, setNewNumber] = useState('');
   const [lastID, setLastID] = useState(5)
   const [filterTerms, setFilterTerms] = useState('');
+  const [newPersonMessage, setNewPersonMessage] = useState('')
 
   useEffect(() => {
     personService
@@ -34,36 +34,35 @@ const App = () => {
       
       if (updateNumber) {
         const updatedPerson = { ...existingPerson, number: newNumber }
-        console.log(updatedPerson);
-        console.log(persons);
-
+        
         personService
           .update(updatedPerson.id, updatedPerson)
           .then(() => {
             setPersons(persons.map(person => {
-              person.id === updatedPerson.id ? { ...person, number: newNumber } : person
-              console.log(persons)
+              if (person.id === updatedPerson.id) return { ...person, number: newNumber }
+              else return person
             }))
             setNewName('')
             setNewNumber('')
           })
-      } else {
-        personService
-          .create(newContact)
-          .then(response => {
-            setPersons(persons.concat(response.data));
-            setLastID(lastID + 1);
-            setNewName('');
-            setNewNumber('');
-          })
-      }
+      } 
+    } else {
+      personService
+        .create({ name : newName, number: newNumber, id: `${lastID}` })
+        .then(response => {
+          console.log(response.data)
+          setNewPersonMessage(`Added ${newName}`)
+          setPersons(persons.concat(response.data));
+          setLastID(lastID + 1);
+          setNewName('');
+          setNewNumber('');
+        })
     }
-
-    
   }
 
   const deleteName = (id) => {
     const confirmed = window.confirm('Are you sure you want to delete this contact?');
+    console.log(id);
 
     if (confirmed) {
       personService
@@ -71,7 +70,6 @@ const App = () => {
         .then(() => {
           setPersons(persons.filter(person => person.id !== id))
         })
-      
     }
    }
 
@@ -79,17 +77,17 @@ const App = () => {
     setFilterTerms(event.target.value.toLowerCase());
   }
 
-  // let filteredPersons = [];
-
-  // for (let i = 0; i < persons.length; i++) {
-  //   if (persons[i].name.includes(filterTerms)) {
-  //     filteredPersons.push(persons[i])
-  //   }
-  // }
+  const filteredPersons = () => {
+    if (filterTerms) {
+      return persons.filter(person => person.name.toLowerCase().includes(filterTerms))
+    }
+    else return persons
+  }
 
   return (
     <div>
       <h2>Phonebook</h2>
+      <Notification message={newPersonMessage} />
       <Filter handleFilterChange={handleFilterChange} />
       
       <h3>Add a new</h3>
@@ -101,9 +99,21 @@ const App = () => {
       />
 
       <h3>Numbers</h3>
-      <Names contacts={persons} deleteName={deleteName} />
+      <Names contacts={filteredPersons()} deleteName={deleteName} />
 
       <button onClick={()=>console.log(persons)}>persons</button>
+    </div>
+  )
+}
+
+const Notification = ({ message }) => {
+  if (message === null) {
+    return null
+  }
+
+  return (
+    <div className='message'>
+      {message}
     </div>
   )
 }
